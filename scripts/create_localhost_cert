@@ -1,0 +1,88 @@
+#!/bin/bash
+DIR=$(dirname "$0")
+DEST=$(dirname $DIR)/src/test/resources/certs
+
+mkdir -p $DEST
+
+# Create the certificate authority
+openssl req -x509 -out $DEST/ca.crt -keyout $DEST/ca.key -newkey rsa:4096 -days 3650 -nodes -sha512 -subj '/CN=local-certificate-authority'
+
+# Display the certificate authority certificate
+#openssl x509 -in $DEST/ca.crt -text -noout
+
+# Create server certificate configuration
+cat > $DEST/server.cnf <<-EOF
+[ req ]
+default_bits = 2048
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[ req_distinguished_name ]
+commonName = localhost
+
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = critical, serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = 127.0.0.1
+DNS.3 = ::1
+EOF
+
+# Create server certificate private key and signing request
+openssl req -new -newkey rsa:4096 -keyout $DEST/server.key =sha256 -nodes -out $DEST/server.csr -subj "/CN=localhost" -config $DEST/server.cnf
+
+# Display the server certificate signing request
+#openssl req -in src/test/resources/certs/server.csr -noout -tex
+
+# Sign the server certificate with the certificate authority
+openssl x509 -req -in $DEST/server.csr -CA $DEST/ca.crt -CAkey $DEST/ca.key -CAcreateserial -out $DEST/server.crt -days 3650 -sha512 
+
+# Display the signed server certificate
+#openssl x509 -in $DEST/server.crt -text -noout
+
+# Generate a PKCS12 server certificate
+openssl pkcs12 -export -out $DEST/server.p12 -passout pass:password -inkey $DEST/server.key -in $DEST/server.crt
+
+# Create test client cert configuration
+cat > $DEST/client.cnf <<-EOF
+[ req ]
+default_bits = 2048
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+
+[ req_distinguished_name ]
+commonName = testuser
+
+##Extensions to add to a certificate request for how it will be used
+[ v3_req ]
+basicConstraints = CA:FALSE
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = critical, clientAuth
+EOF
+
+# Create client certificate private key and signing request
+openssl req -new -newkey rsa:4096 -keyout $DEST/client.key -sha512 -nodes -out $DEST/client.csr -subj "/CN=testuser" -config $DEST/client.cnf
+
+# Sign the client certificate with the certificate authority
+openssl x509 -req -in $DEST/client.csr -CA $DEST/ca.crt -CAkey $DEST/ca.key -CAcreateserial -out $DEST/client.crt -days 3650 -sha512
+
+# Display the signed client certificate
+#openssl x509 -in $DEST/client.crt -text -noout
+
+# Generate a PKCS12 client certificate
+openssl pkcs12 -export -out $DEST/client.p12 -passout pass:password -inkey $DEST/client.key -in $DEST/client.crt
+
+# Create the truststore
+rm -f $DEST/truststore.jks
+keytool -keystore $DEST/truststore.jks -storepass password -storetype JKS -alias CARoot -import -file $DEST/ca.crt -noprompt
+
+# Display contents of the truststore
+keytool -keystore $DEST/truststore.jks -list -storepass password
+
+# tidy up 
+rm $DEST/*.cnf
+rm $DEST/*.csr
