@@ -5,6 +5,7 @@ services:
     environment:
     - SERVER_PORT=8080
     - USE_SSL=false
+    - USE_LOGSTASH=true
     ports:
     - "8080:8080"
 
