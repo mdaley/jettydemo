@@ -13,11 +13,14 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Set;
 
 @Configuration
 public class AppConfig {
     private static final String SERVER_PORT = "SERVER_PORT";
     private static final int SERVER_PORT_DEFAULT = 8080;
+
+    private static final String USE_SSL = "USE_SSL";
 
     private static final String TRUSTSTORE = "TRUSTSTORE";
     private static final String TRUSTSTORE_TYPE = "TRUSTSTORE_TYPE";
@@ -55,7 +58,9 @@ public class AppConfig {
     WebServerFactoryCustomizer<JettyServletWebServerFactory> webServerConfig() {
         return factory -> {
             factory.setPort(environment.getProperty(SERVER_PORT, Integer.class, SERVER_PORT_DEFAULT));
-            factory.setSsl(sslConfig());
+            if (environment.getProperty(USE_SSL, Boolean.class, false)) {
+                factory.setSsl(sslConfig());
+            }
         };
     }
 
