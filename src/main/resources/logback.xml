@@ -17,7 +17,7 @@
         </else>
     </if>
 
-    <root level="INFO">
+    <root level="${APP_LOGGING_LEVEL:-INFO}">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>

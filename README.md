@@ -21,3 +21,6 @@ KEYSTORE_TYPE - the type of the keystore (e.g. pkcs12, jks, ...)
 KEYSTORE_PASSWORD - the password for the keystore
 KEYSTORE_PASSFILE - path to a file containing the keystore password (alternative to using KEYSTORE_PASSWORD)
 
+USE_LOGSTASH - if this equals 'true' write log files in Logstash Json format
+APP_LOGGING_LEVEL - the level of logging at which the system should run from: trace, debug, info, warn, error. (default: info)
+
