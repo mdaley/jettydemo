@@ -1,6 +1,7 @@
 package com.sequsoft.jettydemo;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.embedded.jetty.JettyServletWebServerFactory;
 import org.springframework.boot.web.server.Ssl;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
@@ -13,7 +14,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Set;
 
 @Configuration
 public class AppConfig {
@@ -40,6 +40,7 @@ public class AppConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(value = USE_SSL, havingValue = "true")
     Ssl sslConfig() {
         Ssl ssl = new Ssl();
 
