@@ -76,6 +76,10 @@ openssl x509 -req -in $DEST/client.csr -CA $DEST/ca.crt -CAkey $DEST/ca.key -CAc
 # Generate a PKCS12 client certificate
 openssl pkcs12 -export -out $DEST/client.p12 -passout pass:password -inkey $DEST/client.key -in $DEST/client.crt
 
+# Copy the client key and cert into a decrypt pem file (this can be used with the curl -E <client_cert> option).
+cat $DEST/client.crt > $DEST/client-decrypt.pem
+cat $DEST/client.key >> $DEST/client-decrypt.pem
+
 # Create the truststore
 rm -f $DEST/truststore.jks
 keytool -keystore $DEST/truststore.jks -storepass password -storetype JKS -alias CARoot -import -file $DEST/ca.crt -noprompt
