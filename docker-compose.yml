@@ -7,6 +7,8 @@ services:
     - USE_SSL=false
     - USE_LOGSTASH=false
     - APP_LOGGING_LEVEL=info
+    - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
     ports:
     - "8080:8080"
+    - "5005:5005"
 

@@ -22,6 +22,4 @@ public class JettydemoApplication {
 		LOGGER.info("Hello requested");
 		return String.format("Hello %s!", name);
 	}
-
-
 }
