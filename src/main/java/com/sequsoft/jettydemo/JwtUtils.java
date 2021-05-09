@@ -7,11 +7,9 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Component
 public class JwtUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtUtils.class);
 

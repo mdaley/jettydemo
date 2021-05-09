@@ -1,5 +1,7 @@
 package com.sequsoft.jettydemo;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -11,10 +13,11 @@ import javax.servlet.http.HttpServletResponse;
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    private final JwtTokenFilter jwtTokenFilter;
+    final JwtPublicKeyProvider jwtPublicKeyProvider;
 
-    public SecurityConfig(JwtTokenFilter jwtTokenFilter) {
-        this.jwtTokenFilter = jwtTokenFilter;
+    @Autowired
+    public SecurityConfig(JwtPublicKeyProvider jwtPublicKeyProvider) {
+        this.jwtPublicKeyProvider = jwtPublicKeyProvider;
     }
 
     @Override
@@ -26,6 +29,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage());
                 }).and()
                 .authorizeRequests().anyRequest().permitAll().and()
-                .addFilterAfter(jwtTokenFilter, BasicAuthenticationFilter.class);
+                .addFilterAfter(jwtTokenFilter(), BasicAuthenticationFilter.class);
+    }
+
+    @Bean
+    JwtUtils jwtUtils() {
+        return new JwtUtils(jwtPublicKeyProvider);
+    }
+
+    @Bean
+    JwtTokenFilter jwtTokenFilter() {
+        return new JwtTokenFilter(jwtUtils());
     }
 }
