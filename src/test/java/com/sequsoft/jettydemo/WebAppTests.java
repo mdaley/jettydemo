@@ -18,25 +18,14 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.SocketUtils;
 
-import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 import java.util.Map;
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT)
-@Import(JettydemoApplicationTests.TestConfig.class)
-@TestPropertySource(properties = {
-		"USE_SSL=false",
-		"KEYSTORE=src/test/resources/certs/server.p12",
-		"KEYSTORE_PASSWORD=password",
-		"KEYSTORE_TYPE=pkcs12",
-		"TRUSTSTORE=src/test/resources/certs/truststore.jks",
-		"TRUSTSTORE_PASSFILE=src/test/resources/certs/truststore_passfile",
-		"TRUSTSTORE_TYPE=jks"
-})
-class JettydemoApplicationTests {
+@Import(WebAppTests.TestConfig.class)
+class WebAppTests {
 	private static final int SERVER_PORT;
 
 	private static final JwtHelper jwtHelper = new JwtHelper();
@@ -45,12 +34,7 @@ class JettydemoApplicationTests {
 	static class TestConfig {
 		@Bean
 		public JwtPublicKeyProvider testJwtPublicKeyProvider() {
-			return new JwtPublicKeyProvider() {
-				@Override
-				public RSAPublicKey getPublicKey() {
-					return jwtHelper.getPublicKey();
-				}
-			};
+			return () -> jwtHelper.getPublicKey();
 		}
 	}
 
@@ -59,6 +43,7 @@ class JettydemoApplicationTests {
 		// so setting properties instead of environment variables is perfectly fine!
 		SERVER_PORT = SocketUtils.findAvailableTcpPort();
 		System.setProperty("SERVER_PORT", Integer.toString(SERVER_PORT));
+		System.setProperty("USE_SSL", "false");
 	}
 
 	@Autowired
