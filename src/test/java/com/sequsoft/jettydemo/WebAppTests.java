@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
 import com.auth0.jwt.impl.PublicClaims;
+import com.sequsoft.jettydemo.plugins.JwtPublicKeyPlugin;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -33,7 +34,7 @@ class WebAppTests {
 	@TestConfiguration
 	static class TestConfig {
 		@Bean
-		public JwtPublicKeyProvider testJwtPublicKeyProvider() {
+		public JwtPublicKeyPlugin testJwtPublicKeyProvider() {
 			return () -> jwtHelper.getPublicKey();
 		}
 	}

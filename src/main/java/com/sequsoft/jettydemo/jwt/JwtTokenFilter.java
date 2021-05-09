@@ -1,57 +1,63 @@
-package com.sequsoft.jettydemo;
+package com.sequsoft.jettydemo.jwt;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
-import com.auth0.jwt.interfaces.DecodedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.AuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Optional;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/**
+ * A filter that attempts authentication using JWT.
+ */
 public class JwtTokenFilter extends OncePerRequestFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JwtTokenFilter.class);
 
-    private final JwtUtils jwtUtils;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    public JwtTokenFilter(JwtUtils jwtUtils) {
-        this.jwtUtils = jwtUtils;
+    public JwtTokenFilter(AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        String authorization = request.getHeader(AUTHORIZATION);
+        String authHeader = request.getHeader(AUTHORIZATION);
 
-        Optional<DecodedJWT> decodedJwt = Optional.empty();
+        Authentication successfulAuthentication = null;
 
-        if (StringUtils.hasText(authorization) && authorization.startsWith("Bearer ")) {
-            String[] parts = authorization.split(" ");
+        if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+            String[] parts = authHeader.split(" ");
             if (parts.length == 2) {
                 String token = parts[1];
 
-                decodedJwt = jwtUtils.verifyToken(token);
+                if (StringUtils.hasText(token)) {
+                    try {
+                        successfulAuthentication = authenticationManager.authenticate(new JwtAuthentication(token));
+                        SecurityContextHolder.getContext().setAuthentication(successfulAuthentication);
+                    } catch (AuthenticationException e) {
+                        SecurityContextHolder.clearContext();
+                    }
+                }
             }
         }
 
-        if (decodedJwt.isEmpty()) {
+        if (successfulAuthentication == null) {
             new AuthenticationEntryPointFailureHandler(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                     .onAuthenticationFailure(request, response, new BadCredentialsException("Bad token"));
-        } else {
-            // checking the token
-            // adding it to security context
-
         }
 
         chain.doFilter(request, response);

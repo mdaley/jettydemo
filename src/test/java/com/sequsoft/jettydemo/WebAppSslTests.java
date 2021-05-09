@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 
 import com.auth0.jwt.impl.PublicClaims;
+import com.sequsoft.jettydemo.plugins.JwtPublicKeyPlugin;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
@@ -42,7 +43,7 @@ class WebAppSslTests {
     @TestConfiguration
     static class TestConfig {
         @Bean
-        public JwtPublicKeyProvider testJwtPublicKeyProvider() {
+        public JwtPublicKeyPlugin testJwtPublicKeyProvider() {
             return () -> jwtHelper.getPublicKey();
         }
     }
