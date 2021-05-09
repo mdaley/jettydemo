@@ -6,6 +6,8 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 import com.auth0.jwt.impl.PublicClaims;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -67,16 +69,30 @@ class JettydemoApplicationTests {
 	}
 
 	@Test
-	void hello_responds() throws Exception {
+	void hello_responds() {
 		HttpHeaders headers = new HttpHeaders();
 
 		headers.put(HttpHeaders.AUTHORIZATION, List.of("Bearer " + jwtHelper.createJwt(Map.of(PublicClaims.ISSUER, "issuer",
 				PublicClaims.SUBJECT, "subject"))));
 
 		ResponseEntity<String> response = restTemplate.exchange("http://localhost:" + SERVER_PORT + "/hello", HttpMethod.GET, new HttpEntity<>(headers), String.class);
-		//String response = restTemplate.getForObject("http://localhost:" + SERVER_PORT + "/hello", String.class);
+
 		assertThat(response.getStatusCode().value(), is(200));
 		assertThat(response.getBody(), is("Hello World!"));
 	}
 
+	@ParameterizedTest
+	@ValueSource(strings = {
+			"Bearer THIS_IS_NOT_A_VALID_TOKEN",
+			"THIS_IS_NOT_A_VALID_AUTHORIZATION_HEADER",
+			"AUTH_HEADER SHOULD_HAVE ONLY_TWO_PARTS"})
+	void invalid_token_results_in_unauthorized(String headerValue) {
+		HttpHeaders headers = new HttpHeaders();
+
+		headers.put(HttpHeaders.AUTHORIZATION, List.of(headerValue));
+
+		ResponseEntity<String> response = restTemplate.exchange("http://localhost:" + SERVER_PORT + "/hello", HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+		assertThat(response.getStatusCode().value(), is(401));
+	}
 }

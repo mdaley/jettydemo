@@ -42,22 +42,25 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         String authorization = request.getHeader(AUTHORIZATION);
+
+        Optional<DecodedJWT> decodedJwt = Optional.empty();
+
         if (StringUtils.hasText(authorization) && authorization.startsWith("Bearer ")) {
             String[] parts = authorization.split(" ");
             if (parts.length == 2) {
                 String token = parts[1];
 
-                Optional<DecodedJWT> decodedJwt = jwtUtils.verifyToken(token);
-
-                if (decodedJwt.isEmpty()) {
-                    new AuthenticationEntryPointFailureHandler(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                            .onAuthenticationFailure(request, response, new BadCredentialsException("Bad token"));
-                } else {
-                    // checking the token
-                    // adding it to security context
-
-                }
+                decodedJwt = jwtUtils.verifyToken(token);
             }
+        }
+
+        if (decodedJwt.isEmpty()) {
+            new AuthenticationEntryPointFailureHandler(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                    .onAuthenticationFailure(request, response, new BadCredentialsException("Bad token"));
+        } else {
+            // checking the token
+            // adding it to security context
+
         }
 
         chain.doFilter(request, response);
